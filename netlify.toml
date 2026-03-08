@@ -1,3 +1,3 @@
 [build]
-  publish = "."
-  functions = "netlify/functions"
+publish = "home/claude/thic-sales2"
+functions = "netlify/functions"
