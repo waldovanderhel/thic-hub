@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>HtoEAU · Influencer Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f4f7fb;
+    --surface: #ffffff;
+    --surface2: #edf1f7;
+    --border: #d0d9e8;
+    --accent: #0a4fa6;
+    --accent2: #1a7fc4;
+    --danger: #c0392b;
+    --warn: #d4861a;
+    --text: #0e1e35;
+    --muted: #6b7e99;
+    --green: #0e7a4e;
+    --purple: #5b4fcf;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; margin:0; }
+
+  /* ── ANIMATED BACKGROUND ── */
+  .bg-canvas {
+    position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+  }
+  .bg-orb {
+    position: absolute; border-radius: 50%; filter: blur(80px); opacity: .18;
+    animation: orbFloat 12s ease-in-out infinite;
+  }
+  .bg-orb:nth-child(1) { width: 500px; height: 500px; background: radial-gradient(#00c8ff, transparent); top: -100px; right: -100px; animation-delay: 0s; }
+  .bg-orb:nth-child(2) { width: 350px; height: 350px; background: radial-gradient(#0ff5c8, transparent); bottom: 20%; left: -80px; animation-delay: -4s; }
+  .bg-orb:nth-child(3) { width: 250px; height: 250px; background: radial-gradient(#00c8ff, transparent); top: 50%; right: 10%; animation-delay: -8s; }
+  @keyframes orbFloat {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-30px) scale(1.05); }
+  }
+
+  /* molecule grid */
+  .bg-grid {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image:
+      radial-gradient(circle, rgba(0,200,255,.06) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* ── LAYOUT ── */
+  .wrapper {
+    position: relative; z-index: 1;
+    max-width: 480px; margin: 0 auto;
+    padding: 0 20px 80px;
+    min-height: 100vh;
+  }
+
+  /* ── LOADING ── */
+  #loading-screen {
+    position: fixed; inset: 0; z-index: 100;
+    background: var(--bg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+  }
+  .loader-logo { font-size: 1.6rem; font-weight: 800; letter-spacing: 4px; color: var(--accent); }
+  .loader-sub { font-family: 'DM Mono'; font-size: .7rem; color: var(--muted); letter-spacing: 2px; }
+  .loader-bar { width: 200px; height: 2px; background: var(--surface2); border-radius: 2px; overflow: hidden; }
+  .loader-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 2px; animation: loadBar 1.8s ease forwards; }
+  @keyframes loadBar { from { width: 0 } to { width: 100% } }
+
+  /* ── NOT FOUND ── */
+  #not-found {
+    display: none;
+    flex-direction: column; align-items: center; justify-content: center;
+    min-height: 100vh; text-align: center; gap: 16px;
+  }
+  #not-found h1 { font-size: 2rem; font-weight: 800; color: var(--accent); }
+  #not-found p { color: var(--muted); font-size: .9rem; line-height: 1.6; }
+
+  /* ── HEADER ── */
+  .hub-header {
+    padding: 32px 0 24px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .hub-logo { font-size: .95rem; font-weight: 800; letter-spacing: 3px; color: var(--accent); }
+  .hub-badge {
+    font-family: 'DM Mono'; font-size: .65rem; letter-spacing: 1px;
+    padding: 4px 10px; border: 1px solid var(--border);
+    border-radius: 20px; color: var(--muted);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .live-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent2); display: inline-block;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+
+  /* ── WELCOME CARD ── */
+  .welcome-card {
+    background: linear-gradient(135deg, var(--surface2) 0%, #0a2540 100%);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px 24px;
+    margin-bottom: 20px;
+    position: relative; overflow: hidden;
+    animation: fadeUp .5s ease both;
+  }
+  .welcome-card::before {
+    content: '';
+    position: absolute; top: -40px; right: -40px;
+    width: 160px; height: 160px;
+    background: radial-gradient(circle, rgba(0,200,255,.15), transparent 70%);
+    border-radius: 50%;
+  }
+  .welcome-tag {
+    font-family: 'DM Mono'; font-size: .65rem; letter-spacing: 2px;
+    color: var(--accent); text-transform: uppercase; margin-bottom: 8px;
+  }
+  .welcome-name {
+    font-size: 1.9rem; font-weight: 800; line-height: 1.1;
+    margin-bottom: 6px;
+  }
+  .welcome-sub { font-size: .82rem; color: var(--muted); line-height: 1.5; }
+  .welcome-cat {
+    display: inline-block; margin-top: 12px;
+    font-family: 'DM Mono'; font-size: .65rem;
+    padding: 4px 12px; border-radius: 20px;
+    background: rgba(0,200,255,.1); border: 1px solid rgba(0,200,255,.2);
+    color: var(--accent);
+  }
+
+  /* ── CODE CARD ── */
+  .code-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 20px;
+    animation: fadeUp .5s ease .1s both;
+  }
+  .section-label {
+    font-family: 'DM Mono'; font-size: .6rem; letter-spacing: 2px;
+    color: var(--muted); text-transform: uppercase; margin-bottom: 14px;
+  }
+  .code-display {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--surface2);
+    border: 1px solid rgba(0,200,255,.2);
+    border-radius: 14px; padding: 16px 20px;
+    margin-bottom: 14px;
+    cursor: pointer; transition: all .2s;
+    position: relative; overflow: hidden;
+  }
+  .code-display::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg, rgba(0,200,255,0), rgba(0,200,255,.06), rgba(0,200,255,0));
+    transform: translateX(-100%);
+    transition: transform .6s ease;
+  }
+  .code-display:hover::before { transform: translateX(100%); }
+  .code-display:hover { border-color: rgba(0,200,255,.4); }
+  .code-text {
+    font-family: 'DM Mono'; font-size: 1.6rem; font-weight: 500;
+    letter-spacing: 4px; color: var(--accent); flex: 1;
+  }
+  .copy-btn {
+    background: rgba(0,200,255,.15); border: 1px solid rgba(0,200,255,.25);
+    color: var(--accent); border-radius: 10px; padding: 8px 16px;
+    font-family: 'Syne'; font-size: .75rem; font-weight: 600;
+    cursor: pointer; transition: all .2s; white-space: nowrap;
+  }
+  .copy-btn:hover { background: rgba(0,200,255,.25); }
+  .copy-btn.copied { background: rgba(15,245,200,.15); border-color: rgba(15,245,200,.3); color: var(--accent2); }
+
+  .share-row { display: flex; gap: 8px; }
+  .share-btn {
+    flex: 1; padding: 11px 8px; border-radius: 12px;
+    border: 1px solid var(--border); background: var(--surface2);
+    color: var(--text); font-family: 'Syne'; font-size: .75rem; font-weight: 600;
+    cursor: pointer; transition: all .2s; text-align: center;
+  }
+  .share-btn:hover { border-color: rgba(0,200,255,.3); background: rgba(0,200,255,.05); }
+
+  /* ── STATS GRID ── */
+  .stats-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px; margin-bottom: 20px;
+    animation: fadeUp .5s ease .2s both;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px; padding: 18px 16px;
+    position: relative; overflow: hidden;
+    transition: border-color .2s;
+  }
+  .stat-card:hover { border-color: rgba(0,200,255,.25); }
+  .stat-card::after {
+    content: attr(data-icon);
+    position: absolute; bottom: -4px; right: 6px;
+    font-size: 2.2rem; opacity: .07;
+  }
+  .stat-label { font-family: 'DM Mono'; font-size: .58rem; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
+  .stat-val { font-size: 1.8rem; font-weight: 800; line-height: 1; color: var(--text); }
+  .stat-val.accent { color: var(--accent); }
+  .stat-val.green { color: var(--accent2); }
+  .stat-sub { font-size: .7rem; color: var(--muted); margin-top: 4px; }
+  .stat-card.wide { grid-column: span 2; }
+
+  /* ── RANK CARD ── */
+  .rank-card {
+    background: linear-gradient(135deg, #0a1f30 0%, #071520 100%);
+    border: 1px solid rgba(255,209,102,.15);
+    border-radius: 20px; padding: 22px 24px;
+    margin-bottom: 20px;
+    animation: fadeUp .5s ease .3s both;
+    display: flex; align-items: center; gap: 20px;
+  }
+  .rank-number {
+    font-size: 3.5rem; font-weight: 800; line-height: 1;
+    color: var(--gold); flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .rank-number span { font-size: 1.2rem; vertical-align: super; }
+  .rank-info { flex: 1; }
+  .rank-label { font-family: 'DM Mono'; font-size: .6rem; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; }
+  .rank-sub { font-size: .8rem; color: var(--muted); margin-top: 4px; }
+  .rank-bar-wrap { margin-top: 10px; }
+  .rank-bar {
+    height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden;
+  }
+  .rank-bar-fill {
+    height: 100%; background: linear-gradient(90deg, var(--gold), rgba(255,209,102,.4));
+    border-radius: 2px; transition: width 1s ease;
+  }
+
+  /* ── HISTORY ── */
+  .history-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px; padding: 22px 20px;
+    margin-bottom: 20px;
+    animation: fadeUp .5s ease .4s both;
+  }
+  .shipment-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 0; border-bottom: 1px solid var(--border);
+  }
+  .shipment-row:last-child { border-bottom: none; }
+  .shipment-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: rgba(0,200,255,.1); border: 1px solid rgba(0,200,255,.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; flex-shrink: 0;
+  }
+  .shipment-info { flex: 1; }
+  .shipment-title { font-size: .82rem; font-weight: 600; }
+  .shipment-date { font-family: 'DM Mono'; font-size: .62rem; color: var(--muted); margin-top: 2px; }
+  .shipment-qty { font-family: 'DM Mono'; font-size: .85rem; color: var(--accent); font-weight: 500; }
+
+  /* ── SALES LIST ── */
+  .sales-list { margin-top: 10px; }
+  .sale-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+    animation: fadeIn .3s ease both;
+  }
+  .sale-row:last-child { border-bottom: none; }
+  .sale-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent2); flex-shrink: 0; }
+  .sale-info { flex: 1; }
+  .sale-city { font-size: .82rem; font-weight: 600; }
+  .sale-date { font-family: 'DM Mono'; font-size: .6rem; color: var(--muted); }
+  .sale-amount { font-family: 'DM Mono'; font-size: .88rem; color: var(--accent2); font-weight: 500; }
+  .no-sales { text-align: center; padding: 28px 0; color: var(--muted); font-size: .85rem; line-height: 1.8; }
+
+  /* ── COMMISSION ── */
+  .commission-card {
+    background: linear-gradient(135deg, rgba(15,245,200,.05), rgba(0,200,255,.05));
+    border: 1px solid rgba(15,245,200,.2);
+    border-radius: 20px; padding: 22px 24px;
+    margin-bottom: 20px;
+    animation: fadeUp .5s ease .5s both;
+  }
+  .commission-big { font-size: 2.4rem; font-weight: 800; color: var(--accent2); margin: 8px 0 4px; }
+  .commission-sub { font-size: .78rem; color: var(--muted); }
+
+  /* ── FOOTER ── */
+  .hub-footer {
+    text-align: center; padding: 20px 0;
+    font-family: 'DM Mono'; font-size: .6rem; color: var(--muted); letter-spacing: 1px;
+  }
+
+  /* ── REFRESH INDICATOR ── */
+  .refresh-bar {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+    height: 2px; background: var(--surface2);
+  }
+  .refresh-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width linear;
+  }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 20px;
+    font-family: 'DM Mono'; font-size: .78rem; color: var(--accent2);
+    z-index: 200; transition: transform .3s ease; white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; } to { opacity: 1; }
+  }
+
+  .count-up { display: inline-block; }
+
+  /* ── MOBILE TWEAKS ── */
+  @media (max-width: 360px) {
+    .code-text { font-size: 1.3rem; }
+    .stat-val { font-size: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-canvas">
+  <div class="bg-orb"></div>
+  <div class="bg-orb"></div>
+  <div class="bg-orb"></div>
+</div>
+<div class="bg-grid"></div>
+
+<!-- Loading -->
+<div id="loading-screen">
+  <div class="loader-logo">HtoEAU</div>
+  <div class="loader-sub">INFLUENCER HUB</div>
+  <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+</div>
+
+<!-- Not found -->
+<div id="not-found">
+  <div style="font-size:2.5rem">💧</div>
+  <h1>Code not found</h1>
+  <p>This link doesn't match any active influencer.<br>Contact your THIC rep to get your link.</p>
+</div>
+
+<!-- Main app -->
+<div id="app" style="display:none">
+  <div class="wrapper">
+
+    <div class="hub-header">
+      <div class="hub-logo">HtoEAU</div>
+      <div class="hub-badge">
+        <span class="live-dot"></span>
+        <span id="last-updated">live</span>
+      </div>
+    </div>
+
+    <!-- Welcome -->
+    <div class="welcome-card">
+      <div class="welcome-tag">Welcome back</div>
+      <div class="welcome-name" id="inf-name">—</div>
+      <div class="welcome-sub" id="inf-sub">Hydrogen Water · Partner</div>
+      <div class="welcome-cat" id="inf-cat">—</div>
+    </div>
+
+    <!-- Code -->
+    <div class="code-card" id="code-section" style="display:none">
+      <div class="section-label">Your Discount Code</div>
+      <div class="code-display" onclick="copyCode()">
+        <div class="code-text" id="code-text">—</div>
+        <button class="copy-btn" id="copy-btn">Copy</button>
+      </div>
+      <div class="share-row">
+        <button class="share-btn" onclick="shareIG()">📸 Instagram</button>
+        <button class="share-btn" onclick="shareTT()">🎵 TikTok</button>
+        <button class="share-btn" onclick="shareLink()">🔗 Copy Link</button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid" id="stats-section">
+      <div class="stat-card" data-icon="🛒">
+        <div class="stat-label">Orders</div>
+        <div class="stat-val accent count-up" id="stat-orders">0</div>
+        <div class="stat-sub">with your code</div>
+      </div>
+      <div class="stat-card" data-icon="💧">
+        <div class="stat-label">Revenue</div>
+        <div class="stat-val green" id="stat-revenue">€0</div>
+        <div class="stat-sub">generated</div>
+      </div>
+      <div class="stat-card" data-icon="📦">
+        <div class="stat-label">Cans Gifted</div>
+        <div class="stat-val" id="stat-cans">0</div>
+        <div class="stat-sub">from THIC</div>
+      </div>
+      <div class="stat-card" data-icon="📅">
+        <div class="stat-label">This Month</div>
+        <div class="stat-val accent" id="stat-month">0</div>
+        <div class="stat-sub">orders</div>
+      </div>
+    </div>
+
+    <!-- Commission (only if % set) -->
+    <div class="commission-card" id="commission-section" style="display:none">
+      <div class="section-label">Your Earnings</div>
+      <div class="commission-big" id="commission-val">€0</div>
+      <div class="commission-sub" id="commission-sub">—% commission on all sales</div>
+    </div>
+
+    <!-- Rank -->
+    <div class="rank-card" id="rank-section">
+      <div class="rank-number" id="rank-num"><span>#</span>—</div>
+      <div class="rank-info">
+        <div class="rank-label">Your Rank</div>
+        <div style="font-size:.95rem;font-weight:700" id="rank-label-text">of all partners</div>
+        <div class="rank-sub" id="rank-sub">Based on orders generated</div>
+        <div class="rank-bar-wrap">
+          <div class="rank-bar"><div class="rank-bar-fill" id="rank-bar" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gifted history -->
+    <div class="history-card" id="history-section" style="display:none">
+      <div class="section-label">Samples Shipped to You</div>
+      <div id="shipment-list"></div>
+    </div>
+
+    <!-- Recent sales -->
+    <div class="history-card" id="sales-section">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="section-label" style="margin-bottom:0">Recent Sales via Your Code</div>
+        <div class="live-dot"></div>
+      </div>
+      <div class="sales-list" id="sales-list">
+        <div class="no-sales">No sales yet with your code.<br>Share it and watch this fill up 🚀</div>
+      </div>
+    </div>
+
+    <div class="hub-footer">
+      HtoEAU · Hydrogen Innovation Company<br>
+      Auto-refreshes every 60 seconds
+    </div>
+
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Refresh bar -->
+<div class="refresh-bar"><div class="refresh-bar-fill" id="refresh-fill" style="width:0%"></div></div>
+
+<script>
+const SUPABASE_URL = 'https://oykwunvvqsqsmbouwxjr.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95a3d1bnZ2cXNxc21ib3V3eGpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNDk4NTYsImV4cCI6MjA4NzgyNTg1Nn0.-eOGU9N4TS9d8ImwtIKeZn0ax16_vvLq9bPmZR1wu-8';
+const MOLLIE_KEY  = 'live_Du9qJvNQEhBRAVnphBddrxatuRDgmt';
+
+let influencer = null;
+let mollieOrders = [];
+let allInfluencers = [];
+let refreshTimer = null;
+let refreshInterval = 60; // seconds
+
+// ── INIT ──
+window.addEventListener('DOMContentLoaded', async () => {
+  // Get code from URL: /hub/CODE or ?code=CODE or just ?CODE
+  const params = new URLSearchParams(location.search);
+  let code = params.get('code') || params.get('c') || location.pathname.split('/').pop().toUpperCase();
+
+  // Also check hash
+  if (!code || code === 'INFLUENCER-HUB.HTML') {
+    code = location.hash.replace('#','').toUpperCase();
+  }
+
+  if (!code) {
+    showNotFound();
+    return;
+  }
+
+  await loadData(code);
+});
+
+async function loadData(code) {
+  try {
+    // ── 1. Try Supabase first (works on any device) ──
+    let fromSupabase = false;
+    try {
+      const [infRes, allRes, mollieRes] = await Promise.all([
+        fetch(`${SUPABASE_URL}/rest/v1/influencers?code=ilike.${encodeURIComponent(code)}&limit=1`, {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Accept': 'application/json' }
+        }),
+        fetch(`${SUPABASE_URL}/rest/v1/influencers?select=id,code,conversions&limit=200`, {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Accept': 'application/json' }
+        }),
+        fetch(`${SUPABASE_URL}/rest/v1/mollie_orders?order=date.desc&limit=500`, {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Accept': 'application/json' }
+        })
+      ]);
+
+      if (infRes.ok) {
+        const infData = await infRes.json();
+        if (infData && infData.length) {
+          // Map DB columns to app format
+          const r = infData[0];
+          influencer = {
+            id: r.id, name: r.name, realname: r.realname,
+            email: r.email, phone: r.phone, category: r.category,
+            country: r.country, stage: r.stage, deal_type: r.deal_type,
+            deal_value: r.deal_value, code: r.code, commission: r.commission,
+            start: r.start_date, end: r.end_date,
+            ig: r.ig, ig_followers: r.ig_followers,
+            tt: r.tt, tt_followers: r.tt_followers,
+            yt: r.yt, yt_followers: r.yt_followers,
+            pod: r.pod, pod_followers: r.pod_followers,
+            x: r.x_handle, x_followers: r.x_followers,
+            engagement: r.engagement, primary: r.primary_platform,
+            posts: r.posts, stories: r.stories, reels: r.reels,
+            conversions: r.conversions, revenue: r.revenue,
+            gifted: r.gifted, owner: r.owner, notes: r.notes
+          };
+          fromSupabase = true;
+        }
+      }
+
+      if (allRes.ok) {
+        const allData = await allRes.json();
+        if (allData) allInfluencers = allData.map(r => ({id: r.id, code: r.code, conversions: r.conversions || 0}));
+      }
+
+      if (mollieRes.ok) {
+        const mData = await mollieRes.json();
+        if (mData) mollieOrders = mData;
+      }
+
+    } catch(e) {
+      console.warn('Supabase fetch failed, falling back to localStorage:', e);
+    }
+
+    // ── 2. Fallback to localStorage ──
+    if (!influencer) {
+      allInfluencers = JSON.parse(localStorage.getItem('hhic_influencers') || '[]');
+      influencer = allInfluencers.find(i => i.code && i.code.toUpperCase() === code.toUpperCase());
+      mollieOrders = JSON.parse(localStorage.getItem('hhic_mollie') || '[]');
+    }
+
+    if (!influencer) {
+      showNotFound();
+      return;
+    }
+
+    renderHub();
+    hideLoading();
+    startRefreshBar();
+
+  } catch(e) {
+    console.error(e);
+    showNotFound();
+  }
+}
+
+function renderHub() {
+  const inf = influencer;
+  const code = inf.code || '';
+
+  // Welcome
+  document.getElementById('inf-name').textContent = inf.realname || inf.name || 'Partner';
+  document.getElementById('inf-sub').textContent = `${inf.category || 'Influencer'} · ${inf.country || 'Partner'}`;
+  document.getElementById('inf-cat').textContent = inf.deal_type || 'Gifting Partner';
+
+  // Code
+  if (code) {
+    document.getElementById('code-section').style.display = 'block';
+    document.getElementById('code-text').textContent = code;
+  }
+
+  // Sales data from Mollie orders matching this code
+  const codeOrders = mollieOrders.filter(o =>
+    o.discount_code && o.discount_code.toUpperCase() === code.toUpperCase()
+  );
+
+  const now = new Date();
+  const thisMonth = codeOrders.filter(o => {
+    const d = new Date(o.date);
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  });
+
+  const totalRevenue = codeOrders.reduce((s,o) => s + (o.amount||0), 0);
+  const totalOrders = codeOrders.length;
+  const monthOrders = thisMonth.length;
+  const cansGifted = Number(inf.gifted) || 0;
+
+  // Animate stats
+  animateCount('stat-orders', totalOrders);
+  animateRevenue('stat-revenue', totalRevenue);
+  document.getElementById('stat-cans').textContent = cansGifted.toLocaleString();
+  animateCount('stat-month', monthOrders);
+
+  // Commission
+  if (inf.commission && Number(inf.commission) > 0) {
+    const earned = totalRevenue * (Number(inf.commission) / 100);
+    document.getElementById('commission-section').style.display = 'block';
+    document.getElementById('commission-val').textContent = '€' + earned.toFixed(2);
+    document.getElementById('commission-sub').textContent = `${inf.commission}% commission · €${totalRevenue.toFixed(2)} total sales`;
+  }
+
+  // Rank (based on orders among all influencers who have a code)
+  const codeInfs = allInfluencers
+    .filter(i => i.code)
+    .map(i => ({
+      id: i.id,
+      orders: mollieOrders.filter(o =>
+        o.discount_code && o.discount_code.toUpperCase() === i.code.toUpperCase()
+      ).length
+    }))
+    .sort((a,b) => b.orders - a.orders);
+
+  const rankIdx = codeInfs.findIndex(i => i.id === inf.id);
+  const rank = rankIdx + 1;
+  const total = codeInfs.length;
+  const ordinal = rank === 1 ? 'st' : rank === 2 ? 'nd' : rank === 3 ? 'rd' : 'th';
+
+  document.getElementById('rank-num').innerHTML = `<span>#</span>${rank || '—'}`;
+  document.getElementById('rank-label-text').textContent = `of ${total} partner${total !== 1 ? 's' : ''}`;
+
+  const maxOrders = codeInfs[0]?.orders || 1;
+  const myOrders = codeInfs[rankIdx]?.orders || 0;
+  const rankPct = maxOrders > 0 ? Math.round((myOrders / maxOrders) * 100) : 0;
+  setTimeout(() => {
+    document.getElementById('rank-bar').style.width = rankPct + '%';
+  }, 600);
+
+  const rankMessages = {
+    1: '🔥 You\'re leading the pack!',
+    2: 'So close to #1 — keep pushing!',
+    3: 'Top 3! You\'re on fire 🚀',
+  };
+  document.getElementById('rank-sub').textContent =
+    rankMessages[rank] || `${rankPct}% of the way to #1`;
+
+  // Shipment history from notes
+  if (cansGifted > 0) {
+    document.getElementById('history-section').style.display = 'block';
+    const shipHtml = `
+      <div class="shipment-row">
+        <div class="shipment-icon">📦</div>
+        <div class="shipment-info">
+          <div class="shipment-title">HtoEAU Hydrogen Water Sample</div>
+          <div class="shipment-date">${inf.start || 'Nov 2025'} · DPD</div>
+        </div>
+        <div class="shipment-qty">${cansGifted} cans</div>
+      </div>`;
+    document.getElementById('shipment-list').innerHTML = shipHtml;
+  }
+
+  // Recent sales
+  if (codeOrders.length > 0) {
+    const recent = [...codeOrders]
+      .sort((a,b) => new Date(b.date) - new Date(a.date))
+      .slice(0, 10);
+
+    document.getElementById('sales-list').innerHTML = recent.map(o => `
+      <div class="sale-row">
+        <div class="sale-dot"></div>
+        <div class="sale-info">
+          <div class="sale-city">${o.city || o.name || 'Customer'}</div>
+          <div class="sale-date">${new Date(o.date).toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'})}</div>
+        </div>
+        <div class="sale-amount">€${(o.amount||0).toFixed(2)}</div>
+      </div>`).join('');
+  }
+
+  // Last updated
+  document.getElementById('last-updated').textContent = 'updated ' + new Date().toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'});
+}
+
+// ── COPY CODE ──
+function copyCode() {
+  const code = influencer?.code || '';
+  if (!code) return;
+  navigator.clipboard.writeText(code).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    showToast('Code copied! 💧');
+    setTimeout(() => {
+      btn.textContent = 'Copy';
+      btn.classList.remove('copied');
+    }, 2500);
+  });
+}
+
+function shareIG() {
+  const code = influencer?.code || '';
+  const text = `Try HtoEAU Hydrogen Water 💧 Use my code ${code} for a discount! htoeau.com`;
+  navigator.clipboard.writeText(text);
+  showToast('Caption copied for Instagram!');
+}
+
+function shareTT() {
+  const code = influencer?.code || '';
+  const text = `Use code ${code} at htoeau.com 💧 #HydrogenWater #HtoEAU`;
+  navigator.clipboard.writeText(text);
+  showToast('Caption copied for TikTok!');
+}
+
+function shareLink() {
+  const url = `https://htoeau.com?code=${influencer?.code || ''}`;
+  navigator.clipboard.writeText(url);
+  showToast('Shop link copied!');
+}
+
+// ── ANIMATE ──
+function animateCount(id, target) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const duration = 1000;
+  const start = performance.now();
+  const step = (now) => {
+    const t = Math.min((now - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - t, 3);
+    el.textContent = Math.round(ease * target);
+    if (t < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+function animateRevenue(id, target) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const duration = 1000;
+  const start = performance.now();
+  const step = (now) => {
+    const t = Math.min((now - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - t, 3);
+    el.textContent = '€' + (ease * target).toFixed(2);
+    if (t < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+// ── REFRESH ──
+function startRefreshBar() {
+  clearInterval(refreshTimer);
+  const fill = document.getElementById('refresh-fill');
+  const totalMs = refreshInterval * 1000;
+  const startTime = Date.now();
+
+  const tick = () => {
+    const elapsed = Date.now() - startTime;
+    const pct = Math.min((elapsed / totalMs) * 100, 100);
+    fill.style.width = pct + '%';
+    if (pct >= 100) {
+      refresh();
+    } else {
+      refreshTimer = setTimeout(tick, 200);
+    }
+  };
+  tick();
+}
+
+async function refresh() {
+  const code = influencer?.code;
+  if (code) await loadData(code);
+  else {
+    mollieOrders = JSON.parse(localStorage.getItem('hhic_mollie') || '[]');
+    renderHub();
+    startRefreshBar();
+  }
+}
+
+// ── UI ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function hideLoading() {
+  setTimeout(() => {
+    document.getElementById('loading-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+  }, 1800);
+}
+
+function showNotFound() {
+  document.getElementById('loading-screen').style.display = 'none';
+  document.getElementById('not-found').style.display = 'flex';
+}
+</script>
+</body>
+</html>

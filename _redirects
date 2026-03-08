@@ -1,0 +1,6 @@
+/xero-callback  /.netlify/functions/xero-callback  200
+/xero-auth      /.netlify/functions/xero-auth       200
+/xero-sync      /.netlify/functions/xero-sync        200
+/hub/*          /influencer-hub.html                 200
+/hub            /influencer-hub.html                 200
+/*              /index.html                          200

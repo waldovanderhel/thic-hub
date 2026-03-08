@@ -1,0 +1,27 @@
+[build]
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/xero-callback"
+  to = "/.netlify/functions/xero-callback"
+  status = 200
+
+[[redirects]]
+  from = "/xero-auth"
+  to = "/.netlify/functions/xero-auth"
+  status = 200
+
+[[redirects]]
+  from = "/xero-sync"
+  to = "/.netlify/functions/xero-sync"
+  status = 200
+
+[[redirects]]
+  from = "/hub/*"
+  to = "/influencer-hub.html"
+  status = 200
+
+[[redirects]]
+  from = "/hub"
+  to = "/influencer-hub.html"
+  status = 200
