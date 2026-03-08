@@ -2494,7 +2494,7 @@ function renderRepFilter() {
   const KNOWN_REPS = ['Chris Bibby', 'Micaela Esposito', 'Patrick Gavin', 'Waldo van der Hel'];
   const filteredReps = dynamicReps.filter(r => KNOWN_REPS.includes(r));
   const reps = ['All', ...filteredReps];
-  el.innerHTML = '<span style="font-size:.72rem;font-weight:600;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-right:6px;align-self:center">Rep:</span>' +
+  el.innerHTML = '<span style="font-size:.72rem;font-weight:600;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-right:6px;align-self:center">Owner :</span>' +
     reps.map(r => {
       const count = r === 'All' ? leads.length : (repCounts[r] || 0);
       return `<button class="filter-btn ${r===activeRep?'active':''}" onclick="setRep('${r}',this)">${r}</button>`;
