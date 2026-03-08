@@ -3287,7 +3287,6 @@ function renderHero() {
     <div class="dash-hero">
       <div class="hero-top">
         <div>
-          <div class="hero-greeting">${greeting}${userName ? ', ' + userName : ''}</div>
           <div class="hero-title">Sales Performance</div>
           <div class="hero-subtitle">${isCurrentYear ? monthName+" "+year : year+" Full Year"} &nbsp;&middot;&nbsp; ${activeLeads} active B2B leads${b2cRevYear>0?" &nbsp;&middot;&nbsp; B2C: "+fmt(b2cRevYear):""}</div>
         </div>
@@ -6192,4 +6191,169 @@ try {
   }
 } catch(e) {}
 
+</script>
+
+     <div id="dailyWelcomeOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(5,12,24,0.72);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:24px;">
+  <div id="dailyWelcomeModal" style="width:min(760px,96vw);max-height:90vh;overflow:auto;border-radius:24px;background:linear-gradient(135deg,#0f4fa8 0%,#0b2f6b 42%,#071a3a 100%);box-shadow:0 30px 80px rgba(0,0,0,.35);color:#fff;position:relative;border:1px solid rgba(255,255,255,.14);">
+    <div style="position:absolute;inset:0;pointer-events:none;background:
+      radial-gradient(circle at top right, rgba(255,255,255,.18), transparent 24%),
+      radial-gradient(circle at bottom left, rgba(79,172,254,.20), transparent 28%);border-radius:24px;"></div>
+
+    <div style="position:relative;padding:32px 32px 24px 32px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
+        <div>
+          <div id="dailyWelcomeEyebrow" style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.78;margin-bottom:10px;">Welcome back</div>
+          <div id="dailyWelcomeTitle" style="font-size:34px;line-height:1.05;font-weight:800;margin-bottom:10px;">Good morning</div>
+          <div id="dailyWelcomeSubtitle" style="font-size:15px;line-height:1.6;max-width:560px;opacity:.92;">
+            Here is your THIC Hub daily briefing and the latest platform improvements.
+          </div>
+        </div>
+        <button id="dailyWelcomeCloseTop" style="appearance:none;border:none;background:rgba(255,255,255,.10);color:#fff;width:42px;height:42px;border-radius:12px;font-size:24px;cursor:pointer;line-height:1;">×</button>
+      </div>
+
+      <div style="margin-top:26px;display:grid;grid-template-columns:1.2fr .8fr;gap:18px;">
+        <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:20px;">
+          <div style="font-size:13px;letter-spacing:.12em;text-transform:uppercase;opacity:.75;margin-bottom:12px;">Latest improvements</div>
+          <div id="dailyWelcomeUpdates" style="display:flex;flex-direction:column;gap:12px;"></div>
+        </div>
+
+        <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:20px;">
+          <div style="font-size:13px;letter-spacing:.12em;text-transform:uppercase;opacity:.75;margin-bottom:12px;">Today</div>
+          <div id="dailyWelcomeToday" style="display:flex;flex-direction:column;gap:12px;">
+            <div style="background:rgba(255,255,255,.08);padding:14px;border-radius:16px;">
+              <div style="font-size:12px;opacity:.7;margin-bottom:6px;">Focus</div>
+              <div style="font-size:16px;font-weight:700;">Run the company with clarity</div>
+            </div>
+            <div style="background:rgba(255,255,255,.08);padding:14px;border-radius:16px;">
+              <div style="font-size:12px;opacity:.7;margin-bottom:6px;">Workspace</div>
+              <div style="font-size:16px;font-weight:700;">THIC Hub is ready</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:24px;flex-wrap:wrap;">
+        <div style="font-size:13px;opacity:.78;">Shown once per day per user</div>
+        <div style="display:flex;gap:12px;">
+          <button id="dailyWelcomeCloseSecondary" style="appearance:none;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;padding:14px 18px;border-radius:14px;font-weight:700;cursor:pointer;">Close</button>
+          <button id="dailyWelcomeContinue" style="appearance:none;border:none;background:#fff;color:#0b2f6b;padding:14px 20px;border-radius:14px;font-weight:800;cursor:pointer;box-shadow:0 10px 28px rgba(255,255,255,.16);">Enter THIC Hub</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const improvements = [
+    {
+      date: '2026-03-08',
+      title: 'THIC Console added',
+      description: 'A floating command console is now available across the platform for faster interaction.'
+    },
+    {
+      date: '2026-03-08',
+      title: 'Finance assistant improved',
+      description: 'Outstanding supplier invoices now render in a structured table with amounts and aging.'
+    },
+    {
+      date: '2026-03-08',
+      title: 'GitHub deployment connected',
+      description: 'THIC Hub now deploys automatically through GitHub and Netlify.'
+    }
+  ];
+
+  function getCurrentUserName() {
+    try {
+      if (window.currentUser && window.currentUser.full_name) {
+        return window.currentUser.full_name.split(' ')[0];
+      }
+      if (window.currentUser && window.currentUser.name) {
+        return window.currentUser.name.split(' ')[0];
+      }
+      return 'Waldo';
+    } catch (e) {
+      return 'Waldo';
+    }
+  }
+
+  function getGreetingByHour() {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good morning';
+    if (h < 18) return 'Good afternoon';
+    return 'Good evening';
+  }
+
+  function todayKey() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  function storageKey() {
+    return 'thichub_welcome_seen_' + getCurrentUserName().toLowerCase() + '_' + todayKey();
+  }
+
+  function renderUpdates() {
+    const updatesEl = document.getElementById('dailyWelcomeUpdates');
+    if (!updatesEl) return;
+
+    const latest = improvements.filter(item => item.date === todayKey());
+
+    if (!latest.length) {
+      updatesEl.innerHTML = `
+        <div style="background:rgba(255,255,255,.08);padding:16px;border-radius:16px;">
+          <div style="font-size:15px;font-weight:700;margin-bottom:6px;">No new platform updates today</div>
+          <div style="font-size:14px;line-height:1.5;opacity:.86;">Your workspace is up to date and ready for the day.</div>
+        </div>
+      `;
+      return;
+    }
+
+    updatesEl.innerHTML = latest.map(item => `
+      <div style="background:rgba(255,255,255,.08);padding:16px;border-radius:16px;">
+        <div style="font-size:15px;font-weight:800;margin-bottom:6px;">${item.title}</div>
+        <div style="font-size:14px;line-height:1.5;opacity:.88;">${item.description}</div>
+      </div>
+    `).join('');
+  }
+
+  function closeWelcome() {
+    const overlay = document.getElementById('dailyWelcomeOverlay');
+    if (!overlay) return;
+    overlay.style.display = 'none';
+    document.body.style.overflow = '';
+    try { localStorage.setItem(storageKey(), '1'); } catch (e) {}
+  }
+
+  function showWelcomeIfNeeded() {
+    const overlay = document.getElementById('dailyWelcomeOverlay');
+    if (!overlay) return;
+
+    let alreadySeen = false;
+    try { alreadySeen = localStorage.getItem(storageKey()) === '1'; } catch (e) {}
+
+    if (alreadySeen) return;
+
+    const name = getCurrentUserName();
+    const title = document.getElementById('dailyWelcomeTitle');
+    if (title) title.textContent = getGreetingByHour() + ', ' + name;
+
+    renderUpdates();
+
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const continueBtn = document.getElementById('dailyWelcomeContinue');
+    const closeTop = document.getElementById('dailyWelcomeCloseTop');
+    const closeSecondary = document.getElementById('dailyWelcomeCloseSecondary');
+
+    if (continueBtn) continueBtn.addEventListener('click', closeWelcome);
+    if (closeTop) closeTop.addEventListener('click', closeWelcome);
+    if (closeSecondary) closeSecondary.addEventListener('click', closeWelcome);
+
+    setTimeout(showWelcomeIfNeeded, 250);
+  });
+})();
 </script>
