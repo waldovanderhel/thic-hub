@@ -5240,7 +5240,7 @@ function renderFinanceAnnual(el) {
         <span style="min-width:20px"></span>
       </div>` : ''}
     </div>
-  ` + renderRecurringForecast() + renderSupplierBreakdown();
+  ` + renderRecurringForecast() + renderRecurringStaffCard() + renderRecurringTotalsCard() + renderSupplierBreakdown();
 }
 
 
@@ -5770,7 +5770,98 @@ function renderRecurringForecast() {
   </div>`;
 }
 // ── END RECURRING FORECAST ─────────────────────────────────────────────────
+function renderRecurringStaffCard() {
+  const staffTotal = recurringStaff.reduce((sum, s) => sum + (parseFloat(s.overrideAmount) || parseFloat(s.amount) || 0), 0);
 
+  return `
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-top:20px">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+      <div>
+        <div style="font-family:'Bebas Neue';font-size:1.1rem;letter-spacing:1.5px">Recurring Staff Costs</div>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:2px">Manual monthly staff cost forecast</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:.65rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase">Staff recurring total</div>
+        <div style="font-family:'Bebas Neue';font-size:1.4rem;color:#0e7a4e">${fmtE(staffTotal)}</div>
+      </div>
+    </div>
+
+    <table style="width:100%;border-collapse:collapse">
+      <thead>
+        <tr style="border-bottom:2px solid var(--border)">
+          <th style="padding:8px 12px;text-align:left;font-size:.68rem;text-transform:uppercase;color:var(--muted)">Staff Member</th>
+          <th style="padding:8px 12px;text-align:left;font-size:.68rem;text-transform:uppercase;color:var(--muted)">Role</th>
+          <th style="padding:8px 12px;text-align:right;font-size:.68rem;text-transform:uppercase;color:var(--muted)">Monthly Cost</th>
+          <th style="padding:8px 12px"></th>
+        </tr>
+      </thead>
+      <tbody>
+        ${recurringStaff.length ? recurringStaff.map((s,i)=>`
+          <tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:10px 12px">${s.name}</td>
+            <td style="padding:10px 12px">${s.role || ''}</td>
+            <td style="padding:10px 12px;text-align:right">
+              <input type="number"
+                value="${s.overrideAmount || s.amount || ''}"
+                onchange="updateRecurringStaffAmount(${i},this.value)"
+                style="width:100px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text)">
+            </td>
+            <td style="padding:10px 12px;text-align:right">
+              <button onclick="removeRecurringStaff(${i})"
+                style="padding:3px 8px;border:1px solid #ef4444;color:#ef4444;background:transparent;border-radius:5px;cursor:pointer">
+                ✕
+              </button>
+            </td>
+          </tr>
+        `).join('') : `
+          <tr>
+            <td colspan="4" style="padding:16px 12px;color:var(--muted);font-size:.82rem">No recurring staff costs added yet.</td>
+          </tr>
+        `}
+      </tbody>
+    </table>
+
+    <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
+      <input id="staff-name" placeholder="Staff member"
+        style="padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text)">
+      <input id="staff-role" placeholder="Role / department"
+        style="padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text)">
+      <input id="staff-amount" type="number" placeholder="Monthly cost"
+        style="padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text)">
+      <button onclick="addRecurringStaff()"
+        style="padding:8px 14px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">
+        Add Staff
+      </button>
+    </div>
+  </div>`;
+}
+function renderRecurringTotalsCard() {
+  const supplierTotal = getForecastTotal();
+  const staffTotal = recurringStaff.reduce((sum, s) => sum + (parseFloat(s.overrideAmount) || parseFloat(s.amount) || 0), 0);
+  const combinedTotal = supplierTotal + staffTotal;
+
+  return `
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-top:20px">
+    <div style="font-family:'Bebas Neue';font-size:1.1rem;letter-spacing:1.5px;margin-bottom:14px">Total Monthly Recurring Costs</div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,minmax(180px,1fr));gap:14px">
+      <div style="padding:14px;border:1px solid var(--border);border-radius:10px;background:var(--bg)">
+        <div style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Recurring Suppliers</div>
+        <div style="font-family:'Bebas Neue';font-size:1.5rem;color:#ef4444;margin-top:6px">${fmtE(supplierTotal)}</div>
+      </div>
+
+      <div style="padding:14px;border:1px solid var(--border);border-radius:10px;background:var(--bg)">
+        <div style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Recurring Staff</div>
+        <div style="font-family:'Bebas Neue';font-size:1.5rem;color:#0e7a4e;margin-top:6px">${fmtE(staffTotal)}</div>
+      </div>
+
+      <div style="padding:14px;border:1px solid var(--border);border-radius:10px;background:var(--bg)">
+        <div style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Total Monthly Costs</div>
+        <div style="font-family:'Bebas Neue';font-size:1.5rem;color:var(--text);margin-top:6px">${fmtE(combinedTotal)}</div>
+      </div>
+    </div>
+  </div>`;
+}
 function getXeroActuals() {
   if (Object.keys(xeroActuals).length) return xeroActuals;
   const s = localStorage.getItem('hhic_xero_actuals');
