@@ -5876,7 +5876,7 @@ function renderRecurringStaffCard() {
   </div>`;
 }
 function renderRecurringTotalsCard() {
-  const supplierTotal = getForecastTotal();
+  const supplierTotal = getRecurringItems().reduce((sum, item) => sum + (parseFloat(item.overrideAmount) || parseFloat(item.amount) || 0), 0);
   const staffTotal = recurringStaff.reduce((sum, s) => sum + (parseFloat(s.overrideAmount) || parseFloat(s.amount) || 0), 0);
   const combinedTotal = supplierTotal + staffTotal;
 
