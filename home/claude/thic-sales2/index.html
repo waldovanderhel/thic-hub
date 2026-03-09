@@ -1280,6 +1280,35 @@ let currentUser = null;
 let authToken = null;
 let isAdmin = false;
 
+// Auto-login from invite link
+(function () {
+  const params = new URLSearchParams(window.location.search);
+  const inviteEmail = params.get('e');
+  const invitePin = params.get('p');
+
+  if (!inviteEmail || !invitePin) return;
+
+  loadUsersFromDB().then(() => {
+    const user = USERS.find(
+      u => u.email.toLowerCase() === inviteEmail.toLowerCase() && u.pin === invitePin
+    );
+
+    if (!user) return;
+
+    currentUser = { full_name: user.name || user.email.split('@')[0], email: user.email };
+    currentRole = user.role;
+    isAdmin = user.role === 'admin';
+
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+
+    const adminTab = document.getElementById('admin-tab');
+    if (adminTab) adminTab.style.display = isAdmin ? 'block' : 'none';
+
+    logUserSession('invite-login');
+    initApp();
+  });
+})();
 
 let mollieOrders = JSON.parse(localStorage.getItem('hhic_mollie') || '[]');
 
@@ -1575,7 +1604,7 @@ function copyUserMessage(i) {
 
 function buildInviteMsg(u) {
   const roleLabel = u.role === 'admin' ? 'Administrator' : u.role === 'sales' ? 'Sales Team' : 'Board View';
-  const loginUrl = `https://thic-sales.netlify.app?e=${encodeURIComponent(u.email)}&p=${u.password.replace(/#/g,'%23').replace(/&/g,'%26').replace(/\+/g,'%2B')}`;
+  const loginUrl = `https://thic-sales.netlify.app?e=${encodeURIComponent(u.email)}&p=${u.pin}`;
   return `👋 Hi ${u.name},
 
 You've been invited to *SALESTRACK* — the sales platform of The Hydrogen Innovation Company.
@@ -1584,7 +1613,7 @@ You've been invited to *SALESTRACK* — the sales platform of The Hydrogen Innov
 ${loginUrl}
 
 📧 Email: ${u.email}
-🔑 Password: ${u.password}
+🔑 PIN: ${u.pin}
 👤 Role: ${roleLabel}
 
 — The Hydrogen Innovation Company`;
