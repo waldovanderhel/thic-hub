@@ -4524,11 +4524,11 @@ async function doSignIn(e) {
   const pw = document.getElementById('signin-pw').value;
   const err = document.getElementById('login-err');
   err.textContent = '';
-  if (!email || !pw) { err.textContent = 'Please enter email and password.'; return; }
+  if (!email || !pw) { err.textContent = 'Please enter email and PIN.'; return; }
   // Always try to load latest users from Supabase first
   await loadUsersFromDB();
-  const user = USERS.find(u => u.email.toLowerCase() === email && u.password === pw);
-  if (!user) { err.textContent = 'Incorrect email or password.'; return; }
+  const user = USERS.find(u => u.email.toLowerCase() === email && u.pin === pw);
+  if (!user) { err.textContent = 'Incorrect email or PIN.'; return; }
   currentUser = { full_name: user.name || user.email.split('@')[0], email: user.email };
   currentRole = user.role;
   isAdmin = user.role === 'admin';
