@@ -6145,33 +6145,6 @@ function renderRecurringStaffCard() {
   </div>`;
 }
 
-function renderRecurringTotalsCard() {
-  const supplierTotal = getForecastTotal();
-  const staffTotal = recurringStaff.reduce((sum, s) => sum + (parseFloat(s.overrideAmount) || parseFloat(s.amount) || 0), 0);
-  const combinedTotal = supplierTotal + staffTotal;
-
-  return `
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-top:20px">
-    <div style="font-family:'Bebas Neue';font-size:1.1rem;letter-spacing:1.5px;margin-bottom:14px">Total Monthly Recurring Costs</div>
-
-    <div style="display:grid;grid-template-columns:repeat(3,minmax(180px,1fr));gap:14px">
-      <div style="padding:14px;border:1px solid var(--border);border-radius:10px;background:var(--bg)">
-        <div style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Recurring Suppliers</div>
-        <div style="font-family:'Bebas Neue';font-size:1.5rem;color:#ef4444;margin-top:6px">${fmtE(supplierTotal)}</div>
-      </div>
-
-      <div style="padding:14px;border:1px solid var(--border);border-radius:10px;background:var(--bg)">
-        <div style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Recurring Staff</div>
-        <div style="font-family:'Bebas Neue';font-size:1.5rem;color:#0e7a4e;margin-top:6px">${fmtE(staffTotal)}</div>
-      </div>
-
-      <div style="padding:14px;border:1px solid var(--border);border-radius:10px;background:var(--bg)">
-        <div style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Total Monthly Costs</div>
-        <div style="font-family:'Bebas Neue';font-size:1.5rem;color:var(--text);margin-top:6px">${fmtE(combinedTotal)}</div>
-      </div>
-    </div>
-  </div>`;
-}
 function renderSupplierBreakdown() {
   const lines = getAllXeroLines();
   if (!lines.length) return '';
