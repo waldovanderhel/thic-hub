@@ -5901,19 +5901,17 @@ function renderRecurringTotalsCard() {
         <div style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Total Monthly Costs</div>
         <div style="font-family:'Bebas Neue';font-size:1.5rem;color:var(--text);margin-top:6px">${fmtE(combinedTotal)}</div>
       </div>
-      </div>
 
 <div style="padding:14px;border:1px solid var(--border);border-radius:10px;background:var(--bg)">
  <div style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Runway</div>
 <div style="font-family:'Bebas Neue';font-size:1.5rem;color:var(--text);margin-top:6px">${runwayMonths ? runwayMonths.toFixed(1) + ' months' : 'N/A'}</div>
-<div style="font-size:.75rem;color:var(--muted);margin-top:4px">Cash: ${fmtE(cashAvailable)}</div>
+<div style="font-family:'Bebas Neue';font-size:1.5rem;color:var(--text);margin-top:6px">${runwayMonths ? runwayMonths.toFixed(1) + ' months' : 'N/A'}</div>
 </div>
 
 </div>
 </div>`;
     </div>
-  </div>`;
-}
+
 function getXeroActuals() {
   if (Object.keys(xeroActuals).length) return xeroActuals;
   const s = localStorage.getItem('hhic_xero_actuals');
