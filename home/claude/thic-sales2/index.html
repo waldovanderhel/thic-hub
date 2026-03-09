@@ -4541,21 +4541,37 @@ async function doSignIn(e) {
 }
 
 function createUser() {
-  const name = document.getElementById('inv-name').value.trim();
-  const email = document.getElementById('inv-email').value.trim();
-  const role = document.getElementById('inv-role').value;
-  if (!name || !email) { showToast('Please fill in name and email', 'error'); return; }
-  if (USERS.find(u => u.email === email)) { showToast('A user with this email already exists', 'error'); return; }
-  const password = 'THIC' + Math.random().toString(36).slice(2,8).toUpperCase() + '!';
-  USERS.push({ email, password, name, role });
-  saveUsers();
-  document.getElementById('inv-name').value = '';
-  document.getElementById('inv-email').value = '';
-  const msg = `Hi ${name},\n\nYou have been added to the THIC SalesTrack platform.\n\nLogin: https://thic-sales.netlify.app\nEmail: ${email}\nPassword: ${password}\n\nKind regards,\nThe Hydrogen Innovation Company`;
-  // Show in dedicated overlay
-  document.getElementById('invite-msg-text').value = msg;
-  document.getElementById('invite-msg-overlay').style.display = 'flex';
-  loadUsers();
+ const name = document.getElementById('inv-name').value.trim();
+ const email = document.getElementById('inv-email').value.trim();
+ const role = document.getElementById('inv-role').value;
+ if (!name || !email) { showToast('Please fill in name and email', 'error'); return; }
+ if (USERS.find(u => u.email.toLowerCase() === email.toLowerCase())) { showToast('A user with this email already exists', 'error'); return; }
+ let pin;
+ do {
+  pin = Math.floor(1000 + Math.random() * 9000).toString();
+ } while (USERS.find(u => (u.pin || '') === pin));
+ USERS.push({ email, pin, name, role });
+ saveUsers();
+ document.getElementById('inv-name').value = '';
+ document.getElementById('inv-email').value = '';
+ const roleLabel = role === 'admin' ? 'Administrator' : role === 'sales' ? 'Sales Team' : 'Board View';
+ const msg = `Hi ${name},
+
+You have been added to the THIC Hub platform.
+
+Login: https://thic-sales.netlify.app
+Select your name on the landing page and enter your PIN.
+
+Email: ${email}
+PIN: ${pin}
+Role: ${roleLabel}
+
+Kind regards,
+The Hydrogen Innovation Company`;
+ document.getElementById('invite-msg-text').value = msg;
+ document.getElementById('invite-msg-overlay').style.display = 'flex';
+ loadUsers();
+ renderPinUsers();
 }
 
 function closeInviteOverlay() {
