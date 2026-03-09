@@ -1631,7 +1631,7 @@ function loadUsers() {
       <div style="flex:1;min-width:160px">
         <div style="font-weight:600;font-size:.9rem">${u.name}</div>
         <div style="font-size:.75rem;color:var(--muted)">${u.email}</div>
-        <div style="font-size:.72rem;color:var(--muted);margin-top:2px">pwd: ${u.password}</div>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:2px">PIN: ${u.pin}</div>
       </div>
       <span style="font-size:.68rem;padding:3px 10px;border-radius:20px;font-weight:700;background:${roleBg(u.role)};color:${roleColor(u.role)};white-space:nowrap">${u.role === "shareholder" ? "Board View" : u.role === "sales" ? "Sales" : "Admin"}</span>
       <button onclick="copyUserMessage(${i})" title="Copy login details" style="padding:5px 10px;border:1px solid var(--accent);background:transparent;color:var(--accent);border-radius:6px;font-size:.75rem;cursor:pointer;font-family:'DM Sans'">📋 Copy</button>
