@@ -5654,7 +5654,47 @@ function updateRecurringOverride(idx, val) {
   const items = getRecurringItems();
   if (items[idx]) { items[idx].overrideAmount = val; saveRecurringItems(items); }
 }
+function saveRecurringStaff() {
+  localStorage.setItem('hhic_recurring_staff', JSON.stringify(recurringStaff));
+}
 
+function addRecurringStaff() {
+  const name = document.getElementById('staff-name')?.value.trim();
+  const role = document.getElementById('staff-role')?.value.trim();
+  const amount = parseFloat(document.getElementById('staff-amount')?.value || 0);
+
+  if (!name || !amount) {
+    showToast('Please enter staff name and monthly amount', 'error');
+    return;
+  }
+
+  recurringStaff.push({
+    name,
+    role,
+    amount,
+    overrideAmount: ''
+  });
+
+  saveRecurringStaff();
+  renderFinance();
+
+  document.getElementById('staff-name').value = '';
+  document.getElementById('staff-role').value = '';
+  document.getElementById('staff-amount').value = '';
+}
+
+function updateRecurringStaffAmount(i, value) {
+  if (!recurringStaff[i]) return;
+  recurringStaff[i].overrideAmount = value;
+  saveRecurringStaff();
+  renderFinance();
+}
+
+function removeRecurringStaff(i) {
+  recurringStaff.splice(i, 1);
+  saveRecurringStaff();
+  renderFinance();
+}
 function renderRecurringForecast() {
   const items = getRecurringItems();
   const now = new Date();
